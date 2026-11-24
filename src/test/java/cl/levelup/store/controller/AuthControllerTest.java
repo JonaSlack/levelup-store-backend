@@ -3,9 +3,13 @@ package cl.levelup.store.controller;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+
+import static org.hamcrest.Matchers.containsString;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,7 +42,53 @@ class AuthControllerTest extends ApiTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"usuario\":\"goku\",\"password\":\"0000\"}"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.mensaje").value("Usuario o contraseña incorrectos"));
+                .andExpect(jsonPath("$.mensaje").value("Usuario o contraseña incorrectos. Te quedan 2 intentos"));
+    }
+
+    private ResultActions intentar(String usuario, String password) throws Exception {
+        return mvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"usuario\":\"%s\",\"password\":\"%s\"}".formatted(usuario, password)));
+    }
+
+    @Test
+    void tresIntentosFallidosBloqueanLaCuenta() throws Exception {
+        intentar("goku", "mala").andExpect(status().isUnauthorized());
+        intentar("goku", "mala").andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.mensaje").value("Usuario o contraseña incorrectos. Te queda 1 intento"));
+        intentar("goku", "mala").andExpect(status().isLocked())
+                .andExpect(jsonPath("$.mensaje").value(containsString("Cuenta bloqueada")));
+
+        intentar("goku", "1234").andExpect(status().isLocked());
+    }
+
+    @Test
+    void loginCorrectoReiniciaLosIntentos() throws Exception {
+        intentar("goku", "mala").andExpect(status().isUnauthorized());
+        intentar("goku", "mala").andExpect(status().isUnauthorized());
+        intentar("goku", "1234").andExpect(status().isOk());
+
+        intentar("goku", "mala").andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.mensaje").value("Usuario o contraseña incorrectos. Te quedan 2 intentos"));
+    }
+
+    @Test
+    void adminPuedeDesbloquearUnaCuenta() throws Exception {
+        for (int i = 0; i < 3; i++) {
+            intentar("goku", "mala");
+        }
+        String admin = tokenAdmin();
+        String usuarios = mvc.perform(get("/api/usuarios").header("Authorization", admin))
+                .andExpect(jsonPath("$[?(@.username == 'goku')].bloqueado").value(true))
+                .andReturn().getResponse().getContentAsString();
+        String id = usuarios.replaceAll("(?s).*\\{\"id\":(\\d+),\"username\":\"goku\".*", "$1");
+
+        mvc.perform(put("/api/usuarios/" + id).header("Authorization", admin)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"desbloquear\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bloqueado").value(false));
+
+        intentar("goku", "1234").andExpect(status().isOk());
     }
 
     @Test

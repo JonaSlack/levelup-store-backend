@@ -43,6 +43,9 @@ public class UsuarioService {
         if (req.activo() != null) {
             u.setActivo(req.activo());
         }
+        if (Boolean.TRUE.equals(req.desbloquear())) {
+            u.limpiarBloqueo();
+        }
         return UsuarioResponse.desde(u);
     }
 

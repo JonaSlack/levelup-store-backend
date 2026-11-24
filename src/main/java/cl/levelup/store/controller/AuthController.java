@@ -24,9 +24,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Iniciar sesión", description = "Acepta nombre de usuario o correo. Devuelve access token y refresh token.")
+    @Operation(summary = "Iniciar sesión", description = "Acepta nombre de usuario o correo. Devuelve access token y refresh token. Tras 3 intentos fallidos la cuenta se bloquea 5 minutos.")
     @ApiResponse(responseCode = "200", description = "Credenciales válidas")
-    @ApiResponse(responseCode = "401", description = "Usuario o contraseña incorrectos")
+    @ApiResponse(responseCode = "401", description = "Usuario o contraseña incorrectos; indica los intentos restantes")
+    @ApiResponse(responseCode = "423", description = "Cuenta bloqueada por 3 intentos fallidos (5 minutos)")
     public AuthResponse login(@Valid @RequestBody LoginRequest req) {
         return authService.login(req);
     }

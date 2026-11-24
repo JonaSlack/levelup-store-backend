@@ -33,6 +33,10 @@ public class Usuario {
     @Column(nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
+    private Integer intentosFallidos = 0;
+
+    private LocalDateTime bloqueadoHasta;
+
     @PrePersist
     void antesDeGuardar() {
         if (fechaCreacion == null) {
@@ -55,4 +59,17 @@ public class Usuario {
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
+    public int getIntentosFallidos() { return intentosFallidos == null ? 0 : intentosFallidos; }
+    public void setIntentosFallidos(int intentosFallidos) { this.intentosFallidos = intentosFallidos; }
+    public LocalDateTime getBloqueadoHasta() { return bloqueadoHasta; }
+    public void setBloqueadoHasta(LocalDateTime bloqueadoHasta) { this.bloqueadoHasta = bloqueadoHasta; }
+
+    public boolean estaBloqueado() {
+        return bloqueadoHasta != null && bloqueadoHasta.isAfter(LocalDateTime.now());
+    }
+
+    public void limpiarBloqueo() {
+        intentosFallidos = 0;
+        bloqueadoHasta = null;
+    }
 }

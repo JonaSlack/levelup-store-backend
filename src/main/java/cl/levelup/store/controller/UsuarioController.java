@@ -39,7 +39,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Cambiar rol o estado de un usuario")
+    @Operation(summary = "Cambiar rol, estado o desbloquear un usuario", description = "Ejemplos: {\"rol\":\"ADMIN\"}, {\"activo\":false}, {\"desbloquear\":true}")
     public UsuarioResponse actualizar(@PathVariable Long id, @RequestBody UsuarioUpdateRequest req, Authentication auth) {
         return usuarioService.actualizar(id, req, auth.getName());
     }

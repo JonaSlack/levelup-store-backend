@@ -44,6 +44,11 @@ public class GlobalExceptionHandler {
         return responder(HttpStatus.UNAUTHORIZED, ex.getMessage(), req);
     }
 
+    @ExceptionHandler(CuentaBloqueadaException.class)
+    public ResponseEntity<ErrorResponse> bloqueada(CuentaBloqueadaException ex, HttpServletRequest req) {
+        return responder(HttpStatus.LOCKED, ex.getMessage(), req);
+    }
+
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ErrorResponse> deshabilitado(DisabledException ex, HttpServletRequest req) {
         return responder(HttpStatus.FORBIDDEN, "La cuenta está deshabilitada", req);
