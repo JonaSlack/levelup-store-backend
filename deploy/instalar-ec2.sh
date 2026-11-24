@@ -54,6 +54,13 @@ for par in "api|$REPO_API" "web|$REPO_WEB"; do
 done
 
 echo "==> Backend"
+# maven puede instalar otro JDK como predeterminado; se fuerza el 21
+JAVA21="$(ls -d /usr/lib/jvm/*21* 2>/dev/null | grep -v jre | head -1)"
+if [ -z "$JAVA21" ] || [ ! -x "$JAVA21/bin/javac" ]; then
+  echo "No se encontró el JDK 21 en /usr/lib/jvm" >&2
+  exit 1
+fi
+export JAVA_HOME="$JAVA21"
 (cd "$BASE/api" && mvn -B -q -DskipTests package)
 sudo mkdir -p /opt/levelup
 sudo cp "$BASE"/api/target/levelup-store-backend-*.jar /opt/levelup/app.jar
@@ -68,7 +75,7 @@ ENV
 else
   sudo sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASS}/" /etc/levelup.env
 fi
-JAVA="$(command -v java)"
+JAVA="$JAVA21/bin/java"
 sudo tee /etc/systemd/system/levelup-api.service > /dev/null <<UNIT
 [Unit]
 Description=LevelUp Store API
