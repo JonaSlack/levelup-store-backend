@@ -1,0 +1,32 @@
+name: Pruebas backend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Pruebas
+        run: mvn -B test
+
+      - name: Empaquetar
+        run: mvn -B -DskipTests package
+
+      - name: Guardar jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: levelup-store-backend
+          path: target/levelup-store-backend-*.jar
