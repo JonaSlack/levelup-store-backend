@@ -70,6 +70,7 @@ DB_URL=jdbc:mysql://localhost:3306/levelup_store?useSSL=false&allowPublicKeyRetr
 DB_USER=levelup
 DB_PASSWORD=${DB_PASS}
 JWT_SECRET=$(openssl rand -base64 48 | tr -d '\n')
+CORS_ORIGINS=http://*:5173,http://*:4173
 ENV
   sudo chmod 600 /etc/levelup.env
 else
